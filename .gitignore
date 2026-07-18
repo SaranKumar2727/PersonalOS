@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.venv/
+__pycache__/
+*.py[cod]
+personal_os.db
+backend/personal_os.db
+uploads/
+backend/uploads/
+*.log
+.DS_Store
