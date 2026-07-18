@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ExternalLink, GitBranch, RefreshCw, Star } from 'lucide-react'
+import { API } from './api'
 
 type Repo = {
   id: number
@@ -13,7 +14,6 @@ type Repo = {
   deployed_url?: string
 }
 
-const API = 'http://127.0.0.1:8000/api/v1'
 
 function storageKey() {
   let user = 'default'

@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { ExternalLink, GitBranch, Globe2, Plus, Trash2 } from 'lucide-react'
-type Project={id:number;name:string;description:string;language:string;visibility:string;deployed_url:string;repository_url:string;readme:string;created_at:string}; const API='http://127.0.0.1:8000/api/v1'
+import { API } from './api'
+type Project={id:number;name:string;description:string;language:string;visibility:string;deployed_url:string;repository_url:string;readme:string;created_at:string}
 const Github = GitBranch
 const blank=()=>({name:'',description:'',language:'TypeScript',visibility:'Private',deployed_url:'',repository_url:'',readme:''})
 export default function ProjectsPage(){const [items,setItems]=useState<Project[]>([]),[selected,setSelected]=useState<Project|null>(null),[editing,setEditing]=useState(false),[form,setForm]=useState(blank()),[error,setError]=useState('');useEffect(()=>{fetch(`${API}/projects`).then(r=>r.json()).then((data:Project[])=>{setItems(data);if(data[0])setSelected(data[0])}).catch(()=>setError('Start FastAPI to load projects.'))},[])

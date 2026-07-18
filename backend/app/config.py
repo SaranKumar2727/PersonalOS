@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     google_client_id: str | None = None
     github_client_id: str | None = None
     oauth_redirect_url: str = "http://localhost:8000/api/v1/auth/oauth/callback"
+    frontend_url: str = "http://localhost:5173"
 
 
 settings = Settings()

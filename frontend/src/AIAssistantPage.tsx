@@ -1,7 +1,8 @@
 import { FormEvent, useState } from 'react'
 import { ArrowUp, Bot, CheckCircle2, FileText, Sparkles, WalletCards } from 'lucide-react'
+import { API } from './api'
 
-type Message={role:'user'|'assistant';content:string}; const API='http://127.0.0.1:8000/api/v1'
+type Message={role:'user'|'assistant';content:string}
 const starters=['Plan my day from my open tasks','Summarize my latest notes','What did I spend this month?','Help me organize a project']
 export default function AIAssistantPage(){const [messages,setMessages]=useState<Message[]>([{role:'assistant',content:'I’m your Personal OS assistant. I can help you plan, find, summarize, and organize across your workspace.'}]);const [input,setInput]=useState('');const [loading,setLoading]=useState(false)
  const send=async(e?:FormEvent)=>{e?.preventDefault();const text=input.trim();if(!text||loading)return;const next=[...messages,{role:'user' as const,content:text}];setMessages(next);setInput('');setLoading(true);try{const r=await fetch(`${API}/ai/chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:next})});const data=await r.json();setMessages(current=>[...current,{role:'assistant',content:data.message||data.detail||'I could not answer that right now.'}])}catch{setMessages(current=>[...current,{role:'assistant',content:'I could not reach the Personal OS API. Make sure FastAPI is running.'}])}finally{setLoading(false)}}

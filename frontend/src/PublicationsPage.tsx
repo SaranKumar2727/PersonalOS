@@ -1,8 +1,8 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { ExternalLink, FileText, Plus, Sparkles, Trash2 } from 'lucide-react'
+import { API } from './api'
 
 type Publication={id:number;title:string;authors:string;year:number|null;venue:string;abstract:string;url:string;summary:string;created_at:string}
-const API='http://127.0.0.1:8000/api/v1'
 type PublicationForm={title:string;authors:string;year:number|null;venue:string;abstract:string;url:string;summary:string}
 const blank=():PublicationForm=>({title:'',authors:'',year:new Date().getFullYear(),venue:'',abstract:'',url:'',summary:''})
 export default function PublicationsPage(){const [items,setItems]=useState<Publication[]>([]),[selected,setSelected]=useState<Publication|null>(null),[editing,setEditing]=useState(false),[form,setForm]=useState(blank()),[error,setError]=useState(''),[summarizing,setSummarizing]=useState(false)

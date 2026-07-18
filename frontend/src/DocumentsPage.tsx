@@ -1,8 +1,8 @@
 import { ChangeEvent, useEffect, useState } from 'react'
 import { Download, File, FileText, Folder, FolderPlus, MoreHorizontal, Pencil, Plus, Trash2, Upload } from 'lucide-react'
+import { API, FILES } from './api'
 
 type FolderItem = {id:number;name:string}; type Doc = {id:number;name:string;original_name:string;url:string;mime_type:string;size:number;folder_id:number|null}
-const API='http://127.0.0.1:8000/api/v1', FILES='http://127.0.0.1:8000'
 const prettySize=(size:number)=>size<1024*1024?`${Math.max(1,Math.round(size/1024))} KB`:`${(size/1024/1024).toFixed(1)} MB`
 const iconFor=(mime:string)=>(mime.includes('pdf') ? FileText : File)
 

@@ -1,8 +1,9 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { Check, Flame, HeartPulse, Plus, Trash2 } from 'lucide-react'
+import { API as API_ROOT } from './api'
 
 type Habit = { id: number; name: string; frequency: string; color: string; completed_today: boolean; streak: number; week_done: number }
-const API = 'http://127.0.0.1:8000/api/v1/habits'
+const API = `${API_ROOT}/habits`
 const colors = ['forest', 'purple', 'orange', 'blue']
 
 export default function HabitsPage() {

@@ -1,7 +1,8 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { ArrowDownRight, CircleDollarSign, Plus, Receipt, Trash2, TrendingUp } from 'lucide-react'
+import { API } from './api'
 type Expense={id:number;description:string;amount:number;category:string;expense_date:string;notes:string}
-const API='http://127.0.0.1:8000/api/v1'; const categories=['Food','Transport','Shopping','Bills','Health','Entertainment','Other']; const today=new Date().toISOString().slice(0,10)
+const categories=['Food','Transport','Shopping','Bills','Health','Entertainment','Other']; const today=new Date().toISOString().slice(0,10)
 export default function FinancePage(){const [items,setItems]=useState<Expense[]>([]),[month,setMonth]=useState(today.slice(0,7)),[form,setForm]=useState({description:'',amount:'',category:'Food',expense_date:today,notes:''}),[error,setError]=useState('')
  const load=async()=>{try{const r=await fetch(`${API}/finance/expenses?month=${month}`);if(!r.ok)throw Error();setItems(await r.json())}catch{setError('Start the FastAPI server to track expenses.')}};useEffect(()=>{load()},[month]);const total=useMemo(()=>items.reduce((sum,item)=>sum+item.amount,0),[items]);const largest=items.length?Math.max(...items.map(item=>item.amount)):0
  const add=async(e:FormEvent)=>{e.preventDefault();if(!form.description||!form.amount)return;try{const r=await fetch(`${API}/finance/expenses`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...form,amount:Number(form.amount)})});if(!r.ok)throw Error();const created:Expense=await r.json();if(created.expense_date.startsWith(month))setItems(current=>[created,...current]);setForm({...form,description:'',amount:'',notes:''})}catch{setError('Could not save expense.')}};const remove=async(id:number)=>{await fetch(`${API}/finance/expenses/${id}`,{method:'DELETE'});setItems(current=>current.filter(item=>item.id!==id))}

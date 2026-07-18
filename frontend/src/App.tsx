@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
+import { API } from './api'
 import RichNotesPage from './NotesPage'
 import KnowledgePage from './KnowledgePage'
 import DocumentsPage from './DocumentsPage'
@@ -34,7 +35,6 @@ const tasks = [
 type PersonalTask = { id: number; title: string; project: string | null; priority: 'low' | 'medium' | 'high'; due_date: string | null; completed: boolean }
 type CalendarEvent = { id: number; title: string; event_date: string; start_time: string | null; color: 'forest' | 'purple' | 'orange' | 'blue' }
 type Note = { id: number; title: string; content: string; parent_id: number | null; icon: string; updated_at: string }
-const API = 'http://127.0.0.1:8000/api/v1'
 
 function App() {
   const [authToken, setAuthToken] = useState(() => localStorage.getItem('personal-os-token'))

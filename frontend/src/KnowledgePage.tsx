@@ -1,8 +1,8 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { BookOpen, Plus, Search, Star, Trash2 } from 'lucide-react'
+import { API } from './api'
 
 type Article = { id:number; title:string; summary:string; content:string; category:string; tags:string; favorite:boolean; updated_at:string }
-const API = 'http://127.0.0.1:8000/api/v1'
 const categories = ['All', 'General', 'Work', 'Learning', 'Reference']
 
 export default function KnowledgePage() {

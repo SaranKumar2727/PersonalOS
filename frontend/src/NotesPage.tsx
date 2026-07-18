@@ -1,10 +1,10 @@
 import { ChangeEvent, useEffect, useState } from 'react'
 import { Code2, FileText, Image, ListTodo, Plus, Save, Trash2, Type, Video } from 'lucide-react'
+import { API, FILES } from './api'
 
 type Note = { id: number; title: string; content: string; icon: string; updated_at: string }
 type BlockKind = 'text' | 'heading' | 'checklist' | 'image' | 'video' | 'code'
 type Block = { id: string; type: BlockKind; value: string; checked?: boolean }
-const API = 'http://127.0.0.1:8000/api/v1'
 const emptyBlock = (type: BlockKind = 'text'): Block => ({ id: crypto.randomUUID(), type, value: '' })
 const decode = (value: string): Block[] => { try { const parsed = JSON.parse(value); return Array.isArray(parsed) ? parsed : [emptyBlock()] } catch { return value ? [{...emptyBlock(), value}] : [emptyBlock()] } }
 const detectLanguage = (code: string) => {
