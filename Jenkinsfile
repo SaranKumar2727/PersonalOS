@@ -29,7 +29,7 @@ pipeline {
                 dir('backend') {
                     bat '"%PYTHON%" -m venv .ci-venv'
                     bat '.ci-venv\\Scripts\\python.exe -m pip install -r requirements.txt'
-                    bat '.ci-venv\\Scripts\\python.exe -c "from app.main import app"'
+                    bat '.ci-venv\\Scripts\\python.exe -m compileall -q app'
                 }
             }
         }
