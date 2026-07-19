@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        PYTHON = 'C:\\Users\\Saran Nukala\\AppData\\Local\\Programs\\Python\\Python311\\python.exe'
+    }
+
     options {
         skipDefaultCheckout(false)
         timestamps()
@@ -23,7 +27,7 @@ pipeline {
         stage('Backend validation') {
             steps {
                 dir('backend') {
-                    bat 'python -m venv .ci-venv'
+                    bat '"%PYTHON%" -m venv .ci-venv'
                     bat '.ci-venv\\Scripts\\python.exe -m pip install -r requirements.txt'
                     bat '.ci-venv\\Scripts\\python.exe -c "from app.main import app; print(\"FastAPI import passed\")"'
                 }
