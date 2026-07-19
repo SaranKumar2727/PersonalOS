@@ -18,7 +18,7 @@ def get_db():
     try: yield db
     finally: db.close()
 def view(habit: Habit, db: Session):
-    today=date.today(); dates=set(db.scalars(select(HabitLog.completed_date).where(HabitLog.habit_id==habit.id)).all()); streak=0; cursor=today
+    today=date.today(); dates=set(db.scalars(select(HabitLog.completed_date).where(HabitLog.habit_id==habit.id, HabitLog.owner_id==habit.owner_id)).all()); streak=0; cursor=today
     while cursor in dates: streak+=1; cursor-=timedelta(days=1)
     return {**habit.__dict__, 'completed_today':today in dates, 'streak':streak, 'week_done':sum((today-timedelta(days=i)) in dates for i in range(7))}
 @router.get("", response_model=list[HabitRead])
