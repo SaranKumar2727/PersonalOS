@@ -1,9 +1,12 @@
 import hashlib
 import secrets
 from datetime import datetime, timedelta, timezone
-from urllib.parse import urlencode
+from urllib.parse import urlencode, quote
+from urllib.request import Request, urlopen
+import json
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import RedirectResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from pydantic import BaseModel, Field
@@ -67,3 +70,30 @@ def oauth_start(provider: str):
     if provider == 'github' and settings.github_client_id:
         return {'url':'https://github.com/login/oauth/authorize?'+urlencode({'client_id':settings.github_client_id,'redirect_uri':settings.oauth_redirect_url,'scope':'read:user user:email'})}
     raise HTTPException(status_code=503, detail=f'{provider.title()} OAuth is not configured')
+
+@router.get("/oauth/callback")
+def oauth_callback(code: str, iss: str | None = None, db: Session = Depends(get_db)):
+    """Exchange a provider authorization code, create/find the user, and return to the SPA."""
+    if not settings.google_client_id or not settings.google_client_secret:
+        raise HTTPException(status_code=503, detail="Google OAuth is not configured")
+    body = urlencode({'code': code, 'client_id': settings.google_client_id, 'client_secret': settings.google_client_secret, 'redirect_uri': settings.oauth_redirect_url, 'grant_type': 'authorization_code'}).encode()
+    try:
+        token_request = Request('https://oauth2.googleapis.com/token', data=body, headers={'Content-Type': 'application/x-www-form-urlencoded'}, method='POST')
+        with urlopen(token_request, timeout=15) as response:
+            token_data = json.loads(response.read())
+        access_token = token_data['access_token']
+        profile_request = Request('https://openidconnect.googleapis.com/v1/userinfo', headers={'Authorization': f'Bearer {access_token}'})
+        with urlopen(profile_request, timeout=15) as response:
+            profile = json.loads(response.read())
+        email = profile.get('email', '').strip().lower()
+        name = profile.get('name') or profile.get('email') or 'Google user'
+        if not email:
+            raise ValueError('Google did not return an email address')
+        user = db.scalar(select(User).where(User.email == email))
+        if not user:
+            user = User(name=name, email=email, password_hash=password_hash(secrets.token_urlsafe(32)))
+            db.add(user); db.commit(); db.refresh(user)
+        token = make_token(user)
+        return RedirectResponse(f"{settings.frontend_url}/?oauth_token={quote(token)}")
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f'Google OAuth exchange failed: {exc}')

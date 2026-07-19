@@ -44,6 +44,16 @@ function App() {
   const [open, setOpen] = useState(false)
   const [completed, setCompleted] = useState<string[]>([])
   const isDashboard = active === 'Dashboard'
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const token = params.get('oauth_token')
+    if (!token) return
+    localStorage.setItem('personal-os-token', token)
+    fetch(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((response) => response.json())
+      .then((user) => { localStorage.setItem('personal-os-user', JSON.stringify(user)); setAuthToken(token); setAuthUser(user); window.history.replaceState({}, '', window.location.pathname) })
+      .catch(() => { localStorage.removeItem('personal-os-token') })
+  }, [])
   useEffect(() => { const key = authUser?.email ? `personal-os-theme-${authUser.email.toLowerCase()}` : 'personal-os-theme'; const saved = authUser?.email ? (localStorage.getItem(key) || 'light') : 'light'; localStorage.setItem('personal-os-theme', saved); document.documentElement.classList.toggle('dark', saved === 'dark'); let applied = saved; const timer = setInterval(() => { const current = authUser?.email ? (localStorage.getItem('personal-os-theme') || 'light') : 'light'; if (current !== applied) { applied = current; localStorage.setItem(key, current) } document.documentElement.classList.toggle('dark', current === 'dark') }, 150); return () => clearInterval(timer) }, [authUser?.email])
   useEffect(() => { if (authUser) localStorage.setItem('personal-os-profile', JSON.stringify({name: authUser.name || '', email: authUser.email || '', timezone: 'Asia/Calcutta'})) }, [authUser])
   useEffect(() => { const name = authUser?.name || ''; const initials = name.split(/\s+/).filter(Boolean).map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'U'; const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); let node: Node | null; while (node = walker.nextNode()) { if (node.nodeValue?.trim() === 'SN') node.nodeValue = initials } }, [authUser])
