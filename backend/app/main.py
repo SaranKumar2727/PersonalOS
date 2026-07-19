@@ -48,10 +48,12 @@ if settings.database_url.startswith("sqlite"):
         user_columns = {row[1] for row in connection.execute(text("PRAGMA table_info(users)"))}
         if "github_username" not in user_columns: connection.execute(text("ALTER TABLE users ADD COLUMN github_username VARCHAR(160)"))
         if "github_token" not in user_columns: connection.execute(text("ALTER TABLE users ADD COLUMN github_token VARCHAR(500)"))
+        if "openai_api_key" not in user_columns: connection.execute(text("ALTER TABLE users ADD COLUMN openai_api_key VARCHAR(300)"))
 else:
     with engine.begin() as connection:
         for table in ("habits", "habit_logs"):
             connection.execute(text(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS owner_id INTEGER"))
+        connection.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS openai_api_key VARCHAR(300)"))
 app.include_router(tasks_router)
 app.include_router(calendar_router)
 app.include_router(notes_router)

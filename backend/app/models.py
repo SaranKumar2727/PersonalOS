@@ -143,4 +143,5 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(300))
     github_username: Mapped[str | None] = mapped_column(String(160), nullable=True)
     github_token: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    openai_api_key: Mapped[str | None] = mapped_column(String(300), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

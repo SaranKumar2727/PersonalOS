@@ -9,6 +9,17 @@ export default function KnowledgePage() {
   const [articles, setArticles] = useState<Article[]>([]), [selected, setSelected] = useState<Article|null>(null), [query, setQuery] = useState(''), [category, setCategory] = useState('All'), [editing, setEditing] = useState(false), [error, setError] = useState('')
   const load = async () => { try { const params = new URLSearchParams(); if (query) params.set('query', query); if (category !== 'All') params.set('category', category); const response = await fetch(`${API}/knowledge?${params}`); if (!response.ok) throw Error(); const items: Article[] = await response.json(); setArticles(items); setSelected(current => current && items.find(item => item.id === current.id) || items[0] || null); setError('') } catch { setError('Start the FastAPI server to load your knowledge base.') } }
   useEffect(() => { const timer = setTimeout(load, 180); return () => clearTimeout(timer) }, [query, category])
+  useEffect(() => {
+    const clearDefaultTitle = (event: FocusEvent) => {
+      const input = event.target as HTMLInputElement
+      if (input.tagName !== 'INPUT' || input.value !== 'Untitled article' || !input.className.includes('text-3xl')) return
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set
+      setter?.call(input, '')
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+    }
+    document.addEventListener('focusin', clearDefaultTitle)
+    return () => document.removeEventListener('focusin', clearDefaultTitle)
+  }, [])
   const create = async () => { try { const response = await fetch(`${API}/knowledge`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({title:'Untitled article', category:'General'})}); if (!response.ok) throw Error(); const item: Article = await response.json(); setArticles(current => [item, ...current]); setSelected(item); setEditing(true) } catch { setError('Could not create article.') } }
   const update = (change: Partial<Article>) => { if (!selected) return; const next = {...selected, ...change}; setSelected(next); setArticles(current => current.map(item => item.id === next.id ? next : item)) }
   const save = async (event: FormEvent) => { event.preventDefault(); if (!selected) return; try { const response = await fetch(`${API}/knowledge/${selected.id}`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(selected)}); if (!response.ok) throw Error(); const saved: Article = await response.json(); setSelected(saved); setArticles(current => current.map(item => item.id === saved.id ? saved : item)); setEditing(false) } catch { setError('Could not save article.') } }

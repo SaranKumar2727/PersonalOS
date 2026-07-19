@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from app.models import User
+from app.routers.auth import current_user
 from pydantic import BaseModel, Field
 
 from app.config import settings
@@ -12,12 +14,12 @@ class ChatRequest(BaseModel):
     messages: list[ChatMessage]
 
 @router.post("/chat")
-def chat(payload: ChatRequest):
-    if not settings.openai_api_key:
-        return {"message": "AI Assistant is configured, but no OPENAI_API_KEY is set. Add it to backend/.env and restart FastAPI to enable responses."}
+def chat(payload: ChatRequest, user: User = Depends(current_user)):
+    if not user.openai_api_key:
+        return {"message": "Your AI assistant is not configured yet. Open Settings → AI integrations and add your OpenAI API key."}
     try:
         from openai import OpenAI
-        client = OpenAI(api_key=settings.openai_api_key)
+        client = OpenAI(api_key=user.openai_api_key)
         response = client.responses.create(
             model="gpt-4o-mini",
             instructions="You are the Personal OS assistant. Be concise, practical, and help the user organize tasks, notes, calendar, finance, knowledge, documents, and publications. When asked to take an action, explain the next step clearly.",
