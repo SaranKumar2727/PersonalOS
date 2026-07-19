@@ -1,9 +1,47 @@
-import { FormEvent, useState } from 'react'
+import { FormEvent, useEffect, useRef, useState } from 'react'
 import { ArrowUp, Bot, CheckCircle2, FileText, Sparkles, WalletCards } from 'lucide-react'
 import { API } from './api'
 
-type Message={role:'user'|'assistant';content:string}
-const starters=['Plan my day from my open tasks','Summarize my latest notes','What did I spend this month?','Help me organize a project']
-export default function AIAssistantPage(){const [messages,setMessages]=useState<Message[]>([{role:'assistant',content:'I’m your Personal OS assistant. I can help you plan, find, summarize, and organize across your workspace.'}]);const [input,setInput]=useState('');const [loading,setLoading]=useState(false)
- const send=async(e?:FormEvent)=>{e?.preventDefault();const text=input.trim();if(!text||loading)return;const next=[...messages,{role:'user' as const,content:text}];setMessages(next);setInput('');setLoading(true);try{const r=await fetch(`${API}/ai/chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:next})});const data=await r.json();setMessages(current=>[...current,{role:'assistant',content:data.message||data.detail||'I could not answer that right now.'}])}catch{setMessages(current=>[...current,{role:'assistant',content:'I could not reach the Personal OS API. Make sure FastAPI is running.'}])}finally{setLoading(false)}}
- return <div className="mx-auto max-w-5xl px-5 pb-12 sm:px-9"><section className="mb-7"><p className="mb-2 text-sm font-medium text-forest">AI ASSISTANT</p><h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Think with your OS.</h1><p className="mt-2 text-muted">Ask questions and turn ideas into clear next steps.</p></section><section className="grid min-h-[620px] overflow-hidden rounded-2xl bg-white shadow-sm lg:grid-cols-[220px_1fr]"><aside className="border-b border-slate-100 bg-[#fafbf9] p-4 lg:border-b-0 lg:border-r"><div className="mb-6 flex items-center gap-2"><span className="grid h-9 w-9 place-items-center rounded-xl bg-ink text-lime"><Sparkles size={17}/></span><span className="text-sm font-bold">Personal AI</span></div><p className="mb-3 text-[11px] font-bold uppercase tracking-wide text-muted">Try asking</p><div className="space-y-2">{starters.map(prompt=><button key={prompt} onClick={()=>setInput(prompt)} className="w-full rounded-lg bg-white p-2.5 text-left text-xs leading-5 text-slate-600 hover:bg-[#e8f5ed] hover:text-forest">{prompt}</button>)}</div><div className="mt-8 border-t border-slate-200 pt-4"><p className="text-xs font-semibold">Connected modules</p><div className="mt-3 space-y-2 text-xs text-muted"><span className="flex items-center gap-2"><CheckCircle2 size={14} className="text-forest"/>Tasks</span><span className="flex items-center gap-2"><FileText size={14} className="text-forest"/>Notes</span><span className="flex items-center gap-2"><WalletCards size={14} className="text-forest"/>Finance</span></div></div></aside><div className="flex min-w-0 flex-col"><div className="flex items-center gap-3 border-b border-slate-100 px-5 py-4"><span className="grid h-9 w-9 place-items-center rounded-xl bg-[#e8f5ed] text-forest"><Bot size={18}/></span><div><p className="text-sm font-bold">Personal OS Assistant</p><p className="text-xs text-muted">Ready to help</p></div></div><div className="flex-1 space-y-5 overflow-y-auto p-5 sm:p-8">{messages.map((message,index)=><div key={index} className={`flex gap-3 ${message.role==='user'?'justify-end':''}`}><div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-7 ${message.role==='user'?'bg-forest text-white':'bg-slate-50 text-slate-700'}`}>{message.content}</div></div>)}{loading&&<div className="flex gap-3"><div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-muted">Thinking…</div></div>}</div><form onSubmit={send} className="border-t border-slate-100 p-4"><div className="flex items-end gap-2 rounded-xl bg-slate-50 p-2"><textarea value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}}} placeholder="Ask anything about your Personal OS…" rows={2} className="max-h-32 min-h-12 flex-1 resize-none bg-transparent px-2 py-1 text-sm outline-none"/><button disabled={!input.trim()||loading} className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-forest text-white disabled:opacity-40"><ArrowUp size={17}/></button></div><p className="mt-2 text-center text-[11px] text-muted">Enter to send · Shift + Enter for a new line</p></form></div></section></div>}
+type Message = { role: 'user' | 'assistant'; content: string }
+const starters = ['Plan my day from my open tasks', 'Summarize my latest notes', 'What did I spend this month?', 'Help me organize a project']
+
+export default function AIAssistantPage() {
+  const [messages, setMessages] = useState<Message[]>([{ role: 'assistant', content: 'I’m your Personal OS assistant. I can help you plan, find, summarize, and organize across your workspace.' }])
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [configured, setConfigured] = useState<boolean | null>(null)
+  const composerRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    fetch(`${API}/settings/status`).then((response) => response.json()).then((data) => setConfigured(Boolean(data.openai_configured))).catch(() => setConfigured(false))
+  }, [])
+
+  const chooseStarter = (prompt: string) => {
+    setInput(prompt)
+    requestAnimationFrame(() => {
+      composerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      composerRef.current?.focus()
+    })
+  }
+
+  const send = async (event?: FormEvent) => {
+    event?.preventDefault()
+    const text = input.trim()
+    if (!text || loading) return
+    const next = [...messages, { role: 'user' as const, content: text }]
+    setMessages(next); setInput(''); setLoading(true)
+    try {
+      const response = await fetch(`${API}/ai/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: next }) })
+      const data = await response.json()
+      setMessages((current) => [...current, { role: 'assistant', content: data.message || data.detail || 'I could not answer that right now.' }])
+    } catch {
+      setMessages((current) => [...current, { role: 'assistant', content: 'I could not reach the Personal OS API. Make sure the backend is running.' }])
+    } finally { setLoading(false) }
+  }
+
+  return <div className="mx-auto max-w-5xl px-5 pb-12 sm:px-9">
+    <section className="mb-7"><p className="mb-2 text-sm font-medium text-forest">AI ASSISTANT</p><h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Think with your OS.</h1><p className="mt-2 text-muted">Ask questions and turn ideas into clear next steps.</p></section>
+    {configured === false && <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-semibold">Set your OpenAI API key first</p><p className="mt-1 text-xs leading-5">Open <strong>Settings</strong> from the sidebar, then add your key under AI integrations.</p></div><button onClick={() => window.dispatchEvent(new CustomEvent('personal-os:navigate', { detail: 'Settings' }))} className="shrink-0 rounded-lg bg-amber-700 px-3 py-2 text-xs font-semibold text-white">Open Settings</button></div>}
+    <section className="grid min-h-[620px] overflow-hidden rounded-2xl bg-white shadow-sm lg:grid-cols-[220px_1fr]"><aside className="border-b border-slate-100 bg-[#fafbf9] p-4 lg:border-b-0 lg:border-r"><div className="mb-6 flex items-center gap-2"><span className="grid h-9 w-9 place-items-center rounded-xl bg-ink text-lime"><Sparkles size={17}/></span><span className="text-sm font-bold">Personal AI</span></div><p className="mb-3 text-[11px] font-bold uppercase tracking-wide text-muted">Try asking</p><div className="space-y-2">{starters.map((prompt) => <button key={prompt} onClick={() => chooseStarter(prompt)} className="w-full rounded-lg bg-white p-2.5 text-left text-xs leading-5 text-slate-600 hover:bg-[#e8f5ed] hover:text-forest">{prompt}</button>)}</div><div className="mt-8 border-t border-slate-200 pt-4"><p className="text-xs font-semibold">Connected modules</p><div className="mt-3 space-y-2 text-xs text-muted"><span className="flex items-center gap-2"><CheckCircle2 size={14} className="text-forest"/>Tasks</span><span className="flex items-center gap-2"><FileText size={14} className="text-forest"/>Notes</span><span className="flex items-center gap-2"><WalletCards size={14} className="text-forest"/>Finance</span></div></div></aside><div className="flex min-w-0 flex-col"><div className="flex items-center gap-3 border-b border-slate-100 px-5 py-4"><span className="grid h-9 w-9 place-items-center rounded-xl bg-[#e8f5ed] text-forest"><Bot size={18}/></span><div><p className="text-sm font-bold">Personal OS Assistant</p><p className="text-xs text-muted">Ready to help</p></div></div><div className="flex-1 space-y-5 overflow-y-auto p-5 sm:p-8">{messages.map((message, index) => <div key={index} className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : ''}`}><div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-7 ${message.role === 'user' ? 'bg-forest text-white' : 'bg-slate-50 text-slate-700'}`}>{message.content}</div></div>)}{loading && <div className="flex gap-3"><div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-muted">Thinking…</div></div>}</div><form onSubmit={send} className="border-t border-slate-100 p-4"><div className="flex items-end gap-2 rounded-xl bg-slate-50 p-2"><textarea ref={composerRef} value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); void send() } }} placeholder="Ask anything about your Personal OS…" rows={2} className="max-h-32 min-h-12 flex-1 resize-none bg-transparent px-2 py-1 text-sm outline-none"/><button disabled={!input.trim() || loading} className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-forest text-white disabled:opacity-40"><ArrowUp size={17}/></button></div><p className="mt-2 text-center text-[11px] text-muted">Enter to send · Shift + Enter for a new line</p></form></div></section>
+  </div>
+}
