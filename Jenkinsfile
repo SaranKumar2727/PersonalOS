@@ -14,8 +14,8 @@ pipeline {
         stage('Frontend build') {
             steps {
                 dir('frontend') {
-                    sh 'npm ci'
-                    sh 'npm run build'
+                    bat 'npm ci'
+                    bat 'npm run build'
                 }
             }
         }
@@ -23,9 +23,9 @@ pipeline {
         stage('Backend validation') {
             steps {
                 dir('backend') {
-                    sh 'python3 -m venv .ci-venv'
-                    sh '.ci-venv/bin/pip install -r requirements.txt'
-                    sh '.ci-venv/bin/python -c "from app.main import app; print(\"FastAPI import passed\")"'
+                    bat 'python -m venv .ci-venv'
+                    bat '.ci-venv\\Scripts\\python.exe -m pip install -r requirements.txt'
+                    bat '.ci-venv\\Scripts\\python.exe -c "from app.main import app; print(\"FastAPI import passed\")"'
                 }
             }
         }
@@ -39,8 +39,8 @@ pipeline {
                     string(credentialsId: 'render-deploy-hook', variable: 'RENDER_DEPLOY_HOOK'),
                     string(credentialsId: 'vercel-deploy-hook', variable: 'VERCEL_DEPLOY_HOOK')
                 ]) {
-                    sh 'curl --fail --silent --show-error -X POST "$RENDER_DEPLOY_HOOK"'
-                    sh 'curl --fail --silent --show-error -X POST "$VERCEL_DEPLOY_HOOK"'
+                    powershell 'Invoke-WebRequest -Method POST -Uri $env:RENDER_DEPLOY_HOOK -UseBasicParsing'
+                    powershell 'Invoke-WebRequest -Method POST -Uri $env:VERCEL_DEPLOY_HOOK -UseBasicParsing'
                 }
             }
         }
@@ -49,7 +49,7 @@ pipeline {
     post {
         always {
             dir('backend') {
-                sh 'rm -rf .ci-venv'
+                bat 'if exist .ci-venv rmdir /s /q .ci-venv'
             }
         }
     }
