@@ -35,9 +35,6 @@ pipeline {
         }
 
         stage('Deploy production') {
-            when {
-                branch 'main'
-            }
             steps {
                 withCredentials([
                     string(credentialsId: 'render-deploy-hook', variable: 'RENDER_DEPLOY_HOOK'),
