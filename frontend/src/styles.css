@@ -5,6 +5,8 @@
 html, body, #root { min-height: 100%; }
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; min-width: 320px; min-height: 100dvh; background: var(--color-mist); color: var(--color-ink); font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+/* Keep slash-command menus visible when a note grows beyond its initial canvas height. */
+section[class*="min-h-[650px]"] { overflow: visible !important; }
 button { font: inherit; }
 button, a, input, textarea, select { touch-action: manipulation; }
 @supports (padding: max(0px)) {
